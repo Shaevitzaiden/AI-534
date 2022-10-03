@@ -56,7 +56,7 @@ def load_data(path, normalize=True, sqrt_living15=True):
     # Tack dates to the end
     x = np.hstack((x,dates_np))
     
-    # replace old date location with weights
+    # replace old date location with biases
     x[:,0] = 1
 
     # Year built idx = 12, year renovated idx = 13

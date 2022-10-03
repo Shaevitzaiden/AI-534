@@ -11,6 +11,7 @@ class LRM():
     def __init__(self) -> None:
         self.weights = None
         self.best_weights = None
+        self.mse_ot = None
 
     def train(self, x, y, iterations, lr, method="batch") -> np.array:
         num_samples = x.shape[0]
@@ -41,12 +42,17 @@ class LRM():
             weights = weights - lr*grad_Lw
             
             mse_ot.append(self.get_mse(weights, x, y))
+        
         self.weights = weights
+        self.mse_ot = mse_ot
         return mse_ot
 
-    def evaluate(self, x, y) -> float:
-        # takes in a dev set and return the MSE
-        pass
+    def eval(self, x, y) -> float:
+        # Add bias column to dev data
+        num_samples = x.shape[0]
+        x = np.hstack((x,np.ones((num_samples,1))))
+        y = y.reshape((y.shape[0],1))
+        return self.get_mse(self.weights, x, y)
 
     @staticmethod
     def get_mse(w, x, y):
@@ -112,12 +118,22 @@ def plot_mse(mse_arrays, lrs):
 if __name__ == "__main__":
     t1 = time()
     X, Y = load_data("HW01\IA1_train.csv")
+    X_dev, Y_dev = load_data("HW01\IA1_dev.csv")
     print("load time: {}".format(time()-t1))
     lrs = [10**-1, 10**-2, 10**-3, 10**-4]
     
-    house_model = LRM()
+    house_models = [LRM() for i in range(len(lrs))] # create a model for each lr
     t1 = time()
-    loss_ot = [house_model.train(X, Y, 200, lr) for lr in lrs] 
+    loss_ot = [house_models[i].train(X, Y, 4000, lrs[i]) for i in range(len(house_models))] 
     print("train time = {}".format(time()-t1))
     
+    # Get feature weights for each model
+    feature_weights = [model.weights for model in house_models]
+    print(feature_weights)
+
+    # Get final mse for each model in tuples, MSE = (MSE_train, MSE_dev)
+    eval_mse = [(model.mse_ot[-1], model.eval(X_dev, Y_dev)) for model in house_models]
+    print(eval_mse)
+    
+    # Plot of mse over time for each model/learning rate
     plot_mse(loss_ot, lrs)

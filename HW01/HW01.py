@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-from turtle import shape
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
 from time import time
 
 
@@ -20,14 +19,15 @@ class LRM():
         x = np.hstack((x,np.ones((num_samples,1))))
         num_features = x.shape[1]
         
-        mse_best = np.Inf
-        mse_ot = []
-
         # reshape y into vertical vector
         y = y.reshape((y.shape[0],1))
         
         # Initialize weights as 1 (could change to random in the future)
         weights = np.ones((num_features,1)) # create vertical vector of weights
+
+        mse_best = np.Inf
+        mse_ot = []
+        mse_ot.append(self.get_mse(weights, x, y))
 
         # train the model:
         for i in range(iterations):
@@ -100,7 +100,7 @@ def plot_mse(mse_arrays, lrs):
     lines = []
     for mse, lr in zip(mse_arrays, lrs):
         lines.append(ax.plot(mse, label=str(lr)))
-    # ax.legend(handles=lines, title="lrs", loc=4, fontsize="small", fancybox=True)
+    ax.legend(title="lrs", fontsize="small", fancybox=True, loc='upper right')
     ax.set_ylabel("MSE")
     ax.set_xlabel("Iteration")
     ax.set_title("MSE vs Training Iterations")
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     
     house_model = LRM()
     t1 = time()
-    loss_ot = [house_model.train(X, Y, 10, lr) for lr in lrs] 
+    loss_ot = [house_model.train(X, Y, 200, lr) for lr in lrs] 
     print("train time = {}".format(time()-t1))
     
     plot_mse(loss_ot, lrs)

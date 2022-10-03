@@ -26,22 +26,26 @@ class LRM():
         # reshape y into vertical vector
         y = y.reshape((y.shape[0],1))
         
-        # Initialize weights as 1 (could change to random in the fiuture)
+        # Initialize weights as 1 (could change to random in the future)
         weights = np.ones((num_features,1)) # create vertical vector of weights
 
         # train the model:
         for i in range(iterations):
+            # Compute error (e = y_hat - y)
             error = np.dot(x, weights) - y
-            loss_grad = 2/num_samples * np.dot(x.T, error)
-            weights = weights - lr*loss_grad
-            bias = 2/num_samples * np.sum(error)
+            
+            # Compute gradient for weights
+            grad_Lw = 2/num_samples * np.dot(x.T, error)
+            
+            # Update weights
+            weights = weights - lr*grad_Lw
             
             mse_ot.append(self.get_mse(weights, x, y))
         self.weights = weights
         return mse_ot
 
     def evaluate(self, x, y) -> float:
-        # returns the error using mean squared error
+        # takes in a dev set and return the MSE
         pass
 
     @staticmethod
@@ -90,15 +94,13 @@ def load_data(path, normalize=True, sqrt_living15=True):
 
 
 def plot_mse(mse_arrays, lrs):
-    fig = plt.figure()
-    ax = plt.subplot(fig,111)
-    fig.add_subplot(ax)
+    fig, ax = plt.subplots()
 
     # plot lines and add legend labels to them
     lines = []
     for mse, lr in zip(mse_arrays, lrs):
         lines.append(ax.plot(mse, label=str(lr)))
-    ax.legend(handles=lines, title="lrs", loc=4, fontsize="small", fancybox=True)
+    # ax.legend(handles=lines, title="lrs", loc=4, fontsize="small", fancybox=True)
     ax.set_ylabel("MSE")
     ax.set_xlabel("Iteration")
     ax.set_title("MSE vs Training Iterations")
@@ -111,12 +113,11 @@ if __name__ == "__main__":
     t1 = time()
     X, Y = load_data("HW01\IA1_train.csv")
     print("load time: {}".format(time()-t1))
-    lrs = [10**0, 10**-1, 10**-2, 10**-3, 10**-4]
+    lrs = [10**-1, 10**-2, 10**-3, 10**-4]
     
     house_model = LRM()
     t1 = time()
-    loss = house_model.train(X, Y, 1000, lrs[2])
+    loss_ot = [house_model.train(X, Y, 10, lr) for lr in lrs] 
     print("train time = {}".format(time()-t1))
     
-    plt.plot(loss)
-    plt.show()
+    plot_mse(loss_ot, lrs)

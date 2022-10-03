@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from time import time
+
 
 class LRM():
     def __init__(self) -> None:
@@ -11,28 +13,21 @@ class LRM():
         self.best_weights = None
 
     def train(self, x, y, iterations, lr, method="batch") -> np.array:
-        num_samples = x.shape[0]
+        num_samples = x.shape[1]
         mse_best = np.Inf
         mse_ot = []
-        
+        y = y.reshape((y.shape[0],1))
         # Initialize weights as 1 (could change to random in the fiuture)
-        self.weights = np.ones((num_samples,1)) # create vertical vector of weights
-        self.best_weights = np.copy(self.best_weights) # make a shallow copy of the weights
+        weights = 0.5*  np.ones((num_samples,1)) # create vertical vector of weights
         
         # train the model:
         for i in range(iterations):
-            # print(self.weights.shape)
-            # print(x.shape)
-            # print(y.shape)
-            # print("--------------------")
-            loss_grad = (np.dot(self.weights.T,x) - y)
-            # print(loss_grad.shape)
-            # print(x.shape)
-            loss_grad = 2/num_samples * np.dot(loss_grad,x.T)
-            # print(loss_grad.shape)
-            self.weights = self.weights - lr*loss_grad.T
+            error = np.dot(x, weights) - y
+            loss_grad = 2/num_samples * np.dot(x.T, error)
+            weights = weights - lr*loss_grad
             
-            mse_ot.append(self.get_mse(self.weights, x, y))
+            mse_ot.append(self.get_mse(weights, x, y))
+        self.weights = weights
         return mse_ot
 
     def evaluate(self, x, y) -> float:
@@ -41,7 +36,8 @@ class LRM():
 
     @staticmethod
     def get_mse(w, x, y):
-        mse = np.square(y - np.dot(w.T,x)).mean()
+        mse = np.square(np.dot(x, w) - y).mean()
+        # print(mse)
         return mse
 
 
@@ -83,7 +79,7 @@ def load_data(path, normalize=True, sqrt_living15=True):
         x = np.delete(x, 17, axis=1)
     
     # transpose the x_matrix so each sample vector is vertical 
-    return x.T, y
+    return x, y
 
 
 def plot_mse(mse_arrays, lrs):
@@ -105,12 +101,15 @@ def plot_mse(mse_arrays, lrs):
 
 
 if __name__ == "__main__":
+    t1 = time()
     X, Y = load_data("HW01\IA1_train.csv")
-    
-    # Y = Y.reshape((Y.shape[0],1))
+    print("load time: {}".format(time()-t1))
     lrs = [10**0, 10**-1, 10**-2, 10**-3, 10**-4]
     
     house_model = LRM()
-    loss = house_model.train(X, Y, 1000, 0.001)
+    t1 = time()
+    loss = house_model.train(X, Y, 1000, lrs[4])
+    print("train time = {}".format(time()-t1))
+    
     plt.plot(loss)
     plt.show()

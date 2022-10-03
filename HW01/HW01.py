@@ -63,6 +63,24 @@ def load_data(path, normalize=True, sqrt_living15=True):
     return x, y
 
 
+def plot_mse(mse_arrays, lrs):
+    fig = plt.figure()
+    ax = plt.subplot(fig,111)
+    fig.add_subplot(ax)
+
+    # plot lines and add legend labels to them
+    lines = []
+    for mse, lr in zip(mse_arrays, lrs):
+        lines.append(ax.plot(mse, label=str(lr)))
+    ax.legend(handles=lines, title="lrs", loc=4, fontsize="small", fancybox=True)
+    ax.set_ylabel("MSE")
+    ax.set_xlabel("Iteration")
+    ax.set_title("MSE vs Training Iterations")
+    plt.show()
+    return fig, ax
+    
+
+
 if __name__ == "__main__":
     X, Y = load_data("HW01\IA1_train.csv")
     lrs = [10**0, 10**1, 10**2, 10**3, 10**4]

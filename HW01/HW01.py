@@ -117,7 +117,7 @@ if __name__ == "__main__":
     
     house_model = LRM()
     t1 = time()
-    loss_ot = [house_model.train(X, Y, 10, lr) for lr in lrs] 
+    loss_ot = [house_model.train(X, Y, 100, lr) for lr in lrs] 
     print("train time = {}".format(time()-t1))
     
     plot_mse(loss_ot, lrs)

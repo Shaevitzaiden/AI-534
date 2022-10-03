@@ -7,21 +7,40 @@ import matplotlib.pyplot as plt
 
 class LRM():
     def __init__(self) -> None:
+        self.weights = None
         self.best_weights = None
-        self.mse_ot = None
-        self.mse_final = None
 
     def train(self, x, y, iterations, lr, method="batch") -> np.array:
+        num_samples = x.shape[0]
+        mse_best = np.Inf
+        mse_ot = []
+        
+        # Initialize weights as 1 (could change to random in the fiuture)
+        self.weights = np.ones((num_samples,1)) # create vertical vector of weights
+        self.best_weights = np.copy(self.best_weights) # make a shallow copy of the weights
+        
         # train the model:
-        # 1. 
-        pass
+        for i in range(iterations):
+            # print(self.weights.shape)
+            # print(x.shape)
+            # print(y.shape)
+            # print("--------------------")
+            loss_grad = (np.dot(self.weights.T,x) - y)
+            loss_grad = 2/num_samples * np.dot(loss_grad,x.T)
+            self.weights = self.weights - lr*loss_grad.T
+            
+            mse_ot.append(self.get_mse(self.weights, x, y))
+        return mse_ot
 
     def evaluate(self, x, y) -> float:
         # returns the error using mean squared error
         pass
 
-    # @staticmethod
-    # def get_mse()
+    @staticmethod
+    def get_mse(w, x, y):
+        mse = (np.dot(w.T,x) - y)**2
+        mse = np.mean(mse)
+        return mse
 
 
 def load_data(path, normalize=True, sqrt_living15=True):
@@ -60,7 +79,9 @@ def load_data(path, normalize=True, sqrt_living15=True):
 
     if not sqrt_living15:
         x = np.delete(x, 17, axis=1)
-    return x, y
+    
+    # transpose the x_matrix so each sample vector is vertical 
+    return x.T, y
 
 
 def plot_mse(mse_arrays, lrs):
@@ -83,5 +104,9 @@ def plot_mse(mse_arrays, lrs):
 
 if __name__ == "__main__":
     X, Y = load_data("HW01\IA1_train.csv")
-    lrs = [10**0, 10**1, 10**2, 10**3, 10**4]
-    print(X.shape)
+    lrs = [10**0, 10**-1, 10**-2, 10**-3, 10**-4]
+    
+    house_model = LRM()
+    loss = house_model.train(X, Y, 100, lrs[3])
+    plt.plot(loss)
+    plt.show()

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from turtle import shape
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -13,18 +14,27 @@ class LRM():
         self.best_weights = None
 
     def train(self, x, y, iterations, lr, method="batch") -> np.array:
-        num_samples = x.shape[1]
+        num_samples = x.shape[0]
+        
+        # Add bias column
+        x = np.hstack((x,np.ones((num_samples,1))))
+        num_features = x.shape[1]
+        
         mse_best = np.Inf
         mse_ot = []
+
+        # reshape y into vertical vector
         y = y.reshape((y.shape[0],1))
-        # Initialize weights as 1 (could change to random in the fiuture)
-        weights = 0.5*  np.ones((num_samples,1)) # create vertical vector of weights
         
+        # Initialize weights as 1 (could change to random in the fiuture)
+        weights = np.ones((num_features,1)) # create vertical vector of weights
+
         # train the model:
         for i in range(iterations):
             error = np.dot(x, weights) - y
             loss_grad = 2/num_samples * np.dot(x.T, error)
             weights = weights - lr*loss_grad
+            bias = 2/num_samples * np.sum(error)
             
             mse_ot.append(self.get_mse(weights, x, y))
         self.weights = weights
@@ -52,33 +62,30 @@ def load_data(path, normalize=True, sqrt_living15=True):
     dates_np = np.zeros((data_np.shape[0],3), dtype=np.float64)
     for i, row in enumerate(dates_np[:]):
         row[:] = [int(d) for d in x[i,0].split('/')]
-    
-    # Tack dates to the end
-    x = np.hstack((x,dates_np))
-    
-    # replace old date location with biases
-    x[:,0] = 1
 
-    # Year built idx = 12, year renovated idx = 13
+    
+    x = np.delete(x, 0, axis=1)
+    x = np.hstack((dates_np, x))
+
+    # Year built idx = 15, year renovated idx = 16
     year = 2022
-    for i, row in enumerate(x[:,12:14]):
+    for i, row in enumerate(x[:,15:17]):
         if row[1] != 0:
             row[1] = year - row[1]
         else:
             row[1] = year - row[0]
 
     if normalize:
-        # normalize (minus weights (divide by zero) idx= 0, waterfront idx = 6)
+        # normalize (minus waterfront idx = 8)
         x = x.astype('float64')
         std_x = np.std(x, axis=0)
         mean_x = np.mean(x, axis=0)
-        x[:,1:6] = (x[:,1:6] - mean_x[1:6]) / std_x[1:6]
-        x[:,7:] = (x[:,7:] - mean_x[7:]) / std_x[7:]
+        x[:,:8] = (x[:,:8] - mean_x[:8]) / std_x[:8]
+        x[:,9:] = (x[:,9:] - mean_x[9:]) / std_x[9:]
 
     if not sqrt_living15:
         x = np.delete(x, 17, axis=1)
     
-    # transpose the x_matrix so each sample vector is vertical 
     return x, y
 
 
@@ -108,7 +115,7 @@ if __name__ == "__main__":
     
     house_model = LRM()
     t1 = time()
-    loss = house_model.train(X, Y, 1000, lrs[4])
+    loss = house_model.train(X, Y, 1000, lrs[2])
     print("train time = {}".format(time()-t1))
     
     plt.plot(loss)

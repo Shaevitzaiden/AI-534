@@ -20,10 +20,8 @@ class LRM():
         
         # Add bias column
         x = np.hstack((x,np.ones((num_samples,1))))
+
         num_features = x.shape[1]
-        
-        # reshape y into vertical vector
-        # y = y.reshape((y.shape[0],1))
         
         # Initialize weights as 1 (could change to random in the future)
         weights = np.ones((num_features,)) # create vertical vector of weights
@@ -53,7 +51,6 @@ class LRM():
         # Add bias column to dev data
         num_samples = x.shape[0]
         x = np.hstack((x,np.ones((num_samples,1))))
-        # y = y.reshape((y.shape[0],1))
         return self.get_mse(self.weights, x, y)
     
     def predict(self, x) -> np.array:
@@ -64,7 +61,6 @@ class LRM():
     @staticmethod
     def get_mse(w, x, y):
         mse = np.square(np.dot(x, w) - y).mean()
-        # print(mse)
         return mse
 
 
@@ -141,32 +137,32 @@ def write_results_to_csv(file_name, ids, predictions):
 
 if __name__ == "__main__":
     # month=0, day=1, zipcode=16, lat=17, long=18, sq_living15=20
-    rm_cols = [0, 1, 16]
-    X, Y, ids = load_data("HW01\PA1_train1.csv",remove_col=rm_cols)    
-    X_test, Y_test, ids_test = load_data("HW01\PA1_test1.csv",remove_col=rm_cols, test=True)
+    rm_cols = [20]
+    X, Y, ids = load_data("HW01\IA1_train.csv",remove_col=rm_cols)    
+    X_dev, Y_dev, ids_dev = load_data("HW01\IA1_dev.csv",remove_col=rm_cols)
     
-    lrs = [10**-1]#, 10**-2, 10**-3, 10**-4]
+    lrs = [10**-1, 10**-2, 10**-3, 10**-4]
     
     house_models = [LRM() for i in range(len(lrs))] # create a model for each lr
-    loss_ot = [house_models[i].train(X, Y, 4000, lrs[i]) for i in range(len(house_models))] 
+    loss_ot = [house_models[i].train(X, Y, 100, lrs[i]) for i in range(len(house_models))] 
     
     # Get feature weights for each model
     feature_weights = [model.weights for model in house_models]
     # print(feature_weights)
 
     # Get final mse for each model in tuples, MSE = (MSE_train, MSE_dev)
-    eval_mse = [model.mse_ot[-1] for model in house_models]
+    eval_mse = [(model.mse_ot[-1], model.eval(X_dev, Y_dev)) for model in house_models]
     print(eval_mse)
     
     # Plot of mse over time for each model/learning rate
-    # plot_mse(loss_ot, lrs)
+    plot_mse(loss_ot, lrs)
 
     # Save predictions for kaggle
-    predictions = house_models[0].predict(X_test)
-    print(predictions)
-    ids_test = ids_test.astype(np.int64)
+    # predictions = house_models[0].predict(X_test)
+    # print(predictions)
+    # ids_test = ids_test.astype(np.int64)
     
-    write_results_to_csv("HW01\PA1_predictions_0-1-16.csv", ids_test, predictions)
+    # write_results_to_csv("HW01\PA1_predictions_0-1-16.csv", ids_test, predictions)
 
 
 

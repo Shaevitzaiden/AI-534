@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 
-from fileinput import filename
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt

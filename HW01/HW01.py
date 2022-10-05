@@ -30,9 +30,11 @@ class LRM():
         mse_ot.append(self.get_mse(weights, x, y))
 
         # train the model:
+        #[[x00 x10 x20 x30 ..]   === [y_hat1, y_hat2]
+        # [x01 ]]
         for i in range(iterations):
             # Compute error (e = y_hat - y)
-            error = np.dot(x, weights) - y
+            error = np.dot(x, weights) - y #[e1 e2 e3 ... ]
             
             # Compute gradient for weights
             grad_Lw = 2/num_samples * np.dot(x.T, error)

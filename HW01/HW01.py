@@ -136,14 +136,14 @@ def write_results_to_csv(file_name, ids, predictions):
 
 if __name__ == "__main__":
     # month=0, day=1, zipcode=16, lat=17, long=18, sq_living15=20
-    rm_cols = [20]
+    rm_cols = [20] # or None
     X, Y, ids = load_data("HW01\IA1_train.csv",remove_col=rm_cols)    
     X_dev, Y_dev, ids_dev = load_data("HW01\IA1_dev.csv",remove_col=rm_cols)
     
     lrs = [10**-1, 10**-2, 10**-3, 10**-4]
     
     house_models = [LRM() for i in range(len(lrs))] # create a model for each lr
-    loss_ot = [house_models[i].train(X, Y, 100, lrs[i]) for i in range(len(house_models))] 
+    loss_ot = [house_models[i].train(X, Y, 4000, lrs[i]) for i in range(len(house_models))] 
     
     # Get feature weights for each model
     feature_weights = [model.weights for model in house_models]
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     print(eval_mse)
     
     # Plot of mse over time for each model/learning rate
-    plot_mse(loss_ot, lrs)
+    # plot_mse(loss_ot, lrs)
 
     # Save predictions for kaggle
     # predictions = house_models[0].predict(X_test)

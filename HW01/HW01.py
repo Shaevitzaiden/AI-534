@@ -79,6 +79,7 @@ def load_data(path, normalize=True, remove_col=None, test=False):
         ids = data_np[:,0]
     
     # Split dates
+    # NEED CHANGE, I think an int dtype makes more sense for dates
     dates_np = np.zeros((data_np.shape[0],3), dtype=np.float64)
     for i, row in enumerate(dates_np[:]):
         row[:] = [int(d) for d in x[i,0].split('/')]
@@ -88,6 +89,7 @@ def load_data(path, normalize=True, remove_col=None, test=False):
     x = np.hstack((dates_np, x))
 
     # Year built idx = 15, year renovated idx = 16
+    # NEED CHANGE, year should be year sold not this year
     year = 2022
     for i, row in enumerate(x[:,14:16]):
         if row[1] != 0:

@@ -51,7 +51,7 @@ class LRM():
             elif method == "l1":
                 reg_vals = np.abs(weights[1:]) - lr*reg_param
                 mask = reg_vals > 0
-                weights[1:] = np.sign(weights[1:]) * (reg_vals)
+                weights[1:] = np.sign(weights[1:]) * (reg_vals * mask)
 
 
             mse_ot.append(self.get_mse(weights, x, y))

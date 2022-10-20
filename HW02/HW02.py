@@ -45,7 +45,7 @@ class LRM():
             grad_Lw = 1/num_samples * np.dot(x.T, error)
             
             # Update weights
-            weights = weights - lr*grad_Lw
+            weights = weights + lr*grad_Lw
             if method == "l2":
                 weights[1:] = weights[1:] - lr*reg_param*weights[1:]
             elif method == "l1":
@@ -63,30 +63,27 @@ class LRM():
         return mse_ot
 
     def eval(self, x, y) -> float:
-        # Add bias column to dev data
-        # num_samples = x.shape[0]
-        # x = np.hstack((x,np.ones((num_samples,1))))
-        return self.get_mse(self.weights, x, y)
+        prediction = self.predict(x)
+        prediction[prediction > 0.5] = 1
+        prediction[prediction <= 0.5] = 0
+        return np.sum(prediction == y)
     
     def predict(self, x) -> np.array:
         # num_samples = x.shape[0]
         # x = np.hstack((x,np.ones((num_samples,1))))
-        return np.dot(x, self.weights)
-
+        return self.sigmoid(np.dot(x, self.weights)) # ----------------------------- double check if sigmoid should be here
 
     def loss(w, x, type):
         loss = "poop"
         return loss
 
+    def get_mse(self, w, x, y) -> float: # ------------------------------ double check if sigmoid should be in here
+        mse = np.square(self.sigmoid(np.dot(x, w)) - y).mean()
+        return mse
+ 
     @staticmethod
     def sigmoid(x) -> np.array:
-        return 1 / (1 + np.exp(-x))
-
-    @staticmethod
-    def get_mse(w, x, y) -> float:
-        mse = np.square(np.dot(x, w) - y).mean()
-        return mse
-    
+        return 1 / (1 + np.exp(-x))   
 
 
 def load_data(path, normalize=True, remove_col=None, test=False):
@@ -143,12 +140,14 @@ def write_results_to_csv(file_name, ids, predictions):
 
 if __name__ == "__main__":
     # month=0, day=1, zipcode=16, lat=17, long=18, sq_living15=20
-    rm_cols = [20] # or None
+    rm_cols = None # or None
     X, Y= load_data("HW02\IA2-train.csv")    
     
     model = LRM()
-    loss_ot = model.train(X,Y,0.00001, 1000, 0.01, 1, method='l1')
-    plot_mse([loss_ot], [0.01])
+    loss_ot = model.train(X,Y,10e-2, 300, 10e-1, 0.01, method='l2')
+    plot_mse([loss_ot], [10e-4])
+    
+    print(model.eval(X,Y)/6000)
     # X_dev, Y_dev, ids_dev = load_data("HW01\IA1_dev.csv",remove_col=rm_cols)
     # lrs = [10**-1, 10**-2, 10**-3, 10**-4]
     

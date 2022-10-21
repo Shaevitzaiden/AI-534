@@ -21,15 +21,11 @@ class LRM():
         """
         num_samples = x.shape[0]
 
-        # # Add bias column
-        # x = np.hstack((x,np.ones((num_samples,1))))
-
         num_features = x.shape[1]
 
-        # Initialize weights as 1 (could change to random in the future)
+        # Initialize weights as 0
         weights = np.zeros((num_features,))  # create vertical vector of weights
 
-        mse_best = np.Inf
         mse_ot = []
         mse_ot.append(self.get_mse(weights, x, y))
 
@@ -96,7 +92,8 @@ class LRM():
 def load_data(path, normalize=True, remove_col=None, test=False, test_data=False, stds=None, means=None):
     data_pd = pd.read_csv(path)
     data_np = data_pd.to_numpy()
-    column_headers = list(data_pd.columns)
+    column_headers = np.asarray(data_pd.columns)
+
     if test:
         x = data_np[:, :]
         y = None
@@ -104,8 +101,9 @@ def load_data(path, normalize=True, remove_col=None, test=False, test_data=False
         x = data_np[:, :-1]
         y = data_np[:, -1]
 
+    norm_idx = [2, 6, 7]
+
     if normalize and not test_data:
-        norm_idx = [2, 6, 7]
         x = x.astype('float64')
         means = []
         stds = []
@@ -118,11 +116,8 @@ def load_data(path, normalize=True, remove_col=None, test=False, test_data=False
             stds.append(std_x)
 
     elif normalize:
-        norm_idx = [2, 6, 7]
         x = x.astype('float64')
         for i, mean, std in zip(norm_idx, means, stds):
-            # std_x = np.std(x[:,i], axis=0)
-            # mean_x = np.mean(x[:,i], axis=0)
             x[:, i] = (x[:, i] - mean) / std
 
     if remove_col is not None:
@@ -180,14 +175,13 @@ def write_results_to_csv(file_name, ids, predictions):
 
 
 if __name__ == "__main__":
-    # month=0, day=1, zipcode=16, lat=17, long=18, sq_living15=20
 
     rm_cols = None  # or None
-    X, Y, column_headers, means, stds = load_data("IA2-train.csv")
+    X, Y, column_headers, stds, means = load_data("IA2-train.csv")
     column_headers = np.asarray(column_headers)
     X_test, Y_test = load_data("IA2-dev.csv", means=means, stds=stds, test_data=True)
 
-    X_noisy, Y_noisy, _, mean_noisy, std_noisy = load_data("IA2-train-noisy.csv")
+    X_noisy, Y_noisy, _, std_noisy, mean_noisy = load_data("IA2-train-noisy.csv")
     X_test_noisy, Y_test_noisy = load_data("IA2-dev.csv", means=mean_noisy, stds=std_noisy, test_data=True)
 
     u = 10 ** -2
@@ -204,7 +198,7 @@ if __name__ == "__main__":
                range(len(models))]
     loss_ot_noisy = [
         models_noisy[i].train(X_noisy, Y_noisy, converge_thresh, max_iterations, lrs[i], reg_params[i], method) for i in
-        range(len(models))]
+        range(len(models_noisy))]
 
     # plot_mse([loss_ot], [10e-4])
     train_results = []

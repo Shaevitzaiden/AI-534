@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import csv
-from time import time
 
 
 class LRM():
@@ -159,6 +158,19 @@ def plot_accuracy(train, test, reg_params):
     plt.show()
     return fig, ax
 
+def plot_sparsity(sparsity, reg_params):
+    fig, ax = plt.subplots()
+
+    # plot lines and add legend labels to them
+    lines = []
+    ax.plot(reg_params, sparsity, label='train')
+    # ax.legend(title="Dataset", fontsize="small", fancybox=True, loc='upper right')
+    ax.set_ylabel("Sparsity")
+    ax.set_xlabel("Regularization Parameter")
+    ax.set_title("Sparsity vs. Regularization Parameter")
+    ax.set_xscale('log')
+    plt.show()
+    return fig, ax
 
 def save_array_as_csv(file_name, data):
     np.savetxt(file_name, data, delimiter=",")
@@ -173,71 +185,63 @@ def write_results_to_csv(file_name, ids, predictions):
         writer = csv.writer(csvfile)
         writer.writerows(data_to_write)
 
+def do_analysis(train_path, test_path, lrs, method, plot_accuracy_toggle=False, plot_sparsity_toggle=False,
+                print_weights=False, plot_MSE_toggle=False, print_results=False):
+
+    X, Y, column_headers, stds, means = load_data(train_path)
+
+    X_test, Y_test = load_data(test_path, means=means, stds=stds, test_data=True)
+
+    reg_params = 10 ** np.arange(-6, 3, dtype=float)
+    converge_thresh = 10e-8
+    max_iterations = 3000
+
+    models = [LRM() for i in range(len(reg_params))]
+
+
+    train_results = []
+    test_results = []
+    sparsity = []
+
+    for i in range(len(reg_params)):
+        models[i].train(X, Y, converge_thresh, max_iterations, lrs[i], reg_params[i], method)
+        weights = models[i].weights[1:]
+        top5_weights_index = np.argsort(abs(weights))[-5:]
+
+        train_results.append(models[i].eval(X, Y) / Y.shape[0])
+        test_results.append(models[i].eval(X_test, Y_test) / Y_test.shape[0])
+        if print_results:
+            print(
+                "Train: " + str(round(train_results[i], 4)) + " Test: " + str(round(test_results[i], 4)) + " iters: " + str(
+                    models[i].num_iterations))
+        if print_weights:
+            for j in np.flip(top5_weights_index):
+                print(column_headers[j+1] + ": " + str(round(weights[j], 4)))
+
+        sparsity.append(np.sum(np.absolute(weights) <= 10**-6))
+
+    if plot_sparsity_toggle:
+        plot_sparsity(sparsity, reg_params)
+    if plot_MSE_toggle:
+        mses = [np.array(models[i].mse_ot) for i in range(len(models))]
+        plot_mse(mses, lrs, reg_params)
+    if plot_accuracy_toggle:
+        plot_accuracy(train_results, test_results, reg_params)
+
 
 if __name__ == "__main__":
 
-    rm_cols = None  # or None
-    X, Y, column_headers, stds, means = load_data("IA2-train.csv")
-    column_headers = np.asarray(column_headers)
-    X_test, Y_test = load_data("IA2-dev.csv", means=means, stds=stds, test_data=True)
+    lrs = [10e-1, 10e-1, 10e-1, 10e-1, 10e-1, 10e-2, 10e-2, 10e-3, 10e-4]
+    lrs_noisy = [10e-1, 10e-1, 10e-1, 10e-1, 10e-1, 10e-2, 10e-2, 10e-3, 10e-4]
+    lrs_l1 = [10e-1, 10e-1, 10e-1, 10e-1, 10e-1, 10e-1, 10e-1, 10e-1, 10e-1]
 
-    X_noisy, Y_noisy, _, std_noisy, mean_noisy = load_data("IA2-train-noisy.csv")
-    X_test_noisy, Y_test_noisy = load_data("IA2-dev.csv", means=mean_noisy, stds=std_noisy, test_data=True)
+    do_analysis("IA2-train.csv", "IA2-dev.csv", lrs, method='l2', plot_accuracy_toggle=True,
+                plot_sparsity_toggle=False, print_weights=False, plot_MSE_toggle=False, print_results=True)
 
-    u = 10 ** -2
-    reg_params = 10 ** np.arange(-4, 3, dtype=float)
-    # lrs = [10e-1, 10e-1, 10e-1, 10e-2, 10e-3, 10e-3, 10e-4]
-    lrs = [10e-1, 10e-1, 10e-1, 10e-2, 10e-3, 10e-3, 10e-4]
-    converge_thresh = 10e-8
-    max_iterations = 3000
-    method = 'l2'
-    models = [LRM() for i in range(len(reg_params))]
-    models_noisy = [LRM() for i in range(len(reg_params))]
+    # do_analysis("IA2-train-noisy.csv", "IA2-dev.csv", lrs_noisy, method='l2', plot_accuracy_toggle=False,
+    #             plot_sparsity_toggle=False, print_weights=False, plot_MSE_toggle=False, print_results=False)
 
-    loss_ot = [models[i].train(X, Y, converge_thresh, max_iterations, lrs[i], reg_params[i], method) for i in
-               range(len(models))]
-    loss_ot_noisy = [
-        models_noisy[i].train(X_noisy, Y_noisy, converge_thresh, max_iterations, lrs[i], reg_params[i], method) for i in
-        range(len(models_noisy))]
-
-    # plot_mse([loss_ot], [10e-4])
-    train_results = []
-    test_results = []
-    top5_weights = []
-    top5_weights_index = []
-
-    for i in range(len(reg_params)):
-        top5_weights.append(np.sort(abs(models[i].weights[1:]))[-5:])
-        top5_weights_index.append(1 + np.argsort(abs(models[i].weights[1:]))[-5:])
-
-        train_results.append(models[i].eval(X, Y) / len(Y))
-        test_results.append(models[i].eval(X_test, Y_test) / len(Y_test))
-        print(
-            "Train: " + str(round(train_results[i], 4)) + " Test: " + str(round(test_results[i], 4)) + " iters: " + str(
-                models[i].num_iterations))
-        # print(top5_weights[i])
-        #
-        # print(column_headers[top5_weights_index[i]])
-
-    train_results_noisy = []
-    test_results_noisy = []
-    for i in range(len(reg_params)):
-        # top5_weights.append(np.sort(abs(models[i].weights[1:]))[-5:])
-        # top5_weights_index.append(1 + np.argsort(abs(models[i].weights[1:]))[-5:])
-
-        train_results_noisy.append(models_noisy[i].eval(X_noisy, Y_noisy) / len(Y_noisy))
-        test_results_noisy.append(models_noisy[i].eval(X_test_noisy, Y_test_noisy) / len(Y_test_noisy))
-        print(
-            "Train: " + str(round(train_results_noisy[i], 4)) + " Test: " + str(
-                round(test_results_noisy[i], 4)) + " iters: " + str(
-                models[i].num_iterations))
-        # print(top5_weights[i])
-        #
-        # print(column_headers[top5_weights_index[i]])
-    mses = [np.array(models[i].mse_ot) for i in range(len(models))]
-    # plot_mse(mses, lrs, reg_params)
-    # plot_accuracy(train_results, test_results, reg_params)
-    plot_accuracy(train_results_noisy, test_results_noisy, reg_params)
+    # do_analysis("IA2-train.csv", "IA2-dev.csv", lrs_l1, method='l1', plot_accuracy_toggle=True,
+    #             plot_sparsity_toggle=True, print_weights=True, plot_MSE_toggle=True, print_results=True)
 
 
-    

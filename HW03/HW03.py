@@ -43,7 +43,7 @@ if __name__ == "__main__":
     pos_sentences = sentences[sentiment == 1]
     neg_sentences = sentences[sentiment == 0]
 
-    vectorizer = TfidfVectorizer()
+    vectorizer = TfidfVectorizer(use_idf=True)
     X_pos = vectorizer.fit_transform(pos_sentences)
     names_pos = vectorizer.get_feature_names_out()
 
@@ -59,11 +59,10 @@ if __name__ == "__main__":
     idxs_pos = np.argpartition(summed_idfs_pos, -10)[-10:]
     idxs_neg = np.argpartition(summed_idfs_neg, -10)[-10:]
     
-    print(summed_idfs_pos[idxs_pos])
+    
+    # print(summed_idfs_pos[idxs_pos])
     print(names_pos[idxs_pos]) # highest word counts
 
-    print(summed_idfs_neg[idxs_neg])
+    # print(summed_idfs_neg[idxs_neg])
     print(names_neg[idxs_neg]) # highest word counts
     
-    # print(summed_counts[idxs]) # counts
-    # print(names[idxs]) # highest word counts

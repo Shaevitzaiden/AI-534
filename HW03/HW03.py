@@ -77,36 +77,56 @@ def quadraticSVM_compare(X_train, y_train, X_dev, y_dev, i_s):
     plt.show()
     return accuracy
 
-def rbfSVM_compare(X_train, y_train, X_dev, y_dev, ics, igs):
+def rbfSVM_compare(X_train, y_train, X_dev, y_dev, ics, igs, heatmap=True):
     cs = np.power(10*np.ones(ics.shape), ics)
     gs = np.power(10*np.ones(igs.shape), igs)
     cc, gg = np.meshgrid(cs, gs)
     cc_vertical = cc.flatten().reshape(cc.size,1)
     gg_vertical = gg.flatten().reshape(gg.size,1)
     
-    # Create vector of combinations so we can use a single loop as opposed to nested loops, just less messy
-    combo_vector = np.hstack((cc_vertical, gg_vertical))
-    print(combo_vector)
-    
-    accuracy = []
-    for i, (g, c) in enumerate(combo_vector):
-        rbfSVM = SVC(C=c, kernel='rbf', gamma=g)
-        rbfSVM.fit(X_train, y_train)
-        predictions = rbfSVM.predict(X_dev)
-        accuracy.append(np.sum(predictions == y_dev)/np.size(y_dev))
-        print("g = {0}, c = {1}, accuracy = {2}%".format(np.round(g,2), np.round(c,2), np.round(100*accuracy[i],3)))
-    
-    best_idx = np.argmax(accuracy)
-    print("----- BEST -----")
-    best_g, best_c = combo_vector[best_idx]
-    print("g = ({0}, {1}), c = ({2}, {3}), accuracy = {4}%".format(np.round(best_g,2), np.round(np.log10(best_g),2), np.round(best_c,2), np.round(np.log10(best_c),2), np.round(100*accuracy[best_idx],3)))
+    accuracy_train = np.zeros((gs.size, cs.size))
+    accuracy_dev = accuracy_train.copy()
 
-    # plt.plot(np.log10(cs), accuracy)
-    # plt.xlabel("$log_{10}$(c)")
-    # plt.ylabel("Accuracy (%)")
-    # plt.title("Quadratic SVM Accuracy vs c")
-    # plt.show()
-    return accuracy
+    for col, c in enumerate(cs): # columns
+        for row, g in enumerate(gs): # rows
+            rbfSVM = SVC(C=c, kernel='rbf', gamma=g)
+            rbfSVM.fit(X_train, y_train)
+            
+            predictions_train = rbfSVM.predict(X_train)
+            predictions_dev = rbfSVM.predict(X_dev)
+            
+            accuracy_train[row,col]= (np.sum(predictions_train == y_train)/np.size(y_train))
+            accuracy_dev[row,col]= (np.sum(predictions_dev == y_dev)/np.size(y_dev))
+            print("c = {0}, g = {1}, accuracy = {2}%".format(np.round(c,2), np.round(g,2), np.round(100*accuracy_dev[row,col],3)))
+
+    br, bc = np.argmax(accuracy_dev)
+    print("------- BEST -------")
+    print("c = {0}, g = {1}, accuracy = {2}%".format(np.round(cs[bc],2), np.round(gs[br],2), np.round(100*accuracy_dev[br,bc],3)))
+
+    if heatmap:
+        f,(ax1,ax2, cax) = plt.subplots(1,3, gridspec_kw={'width_ratios': [1,1,0.1], 'height_ratios': [1]})
+        min_val = np.min(np.hstack((accuracy_train, accuracy_train)))
+        
+        m1 = sns.heatmap(accuracy_train, cmap='hot', ax=ax1, cbar=False, vmin=min_val, vmax=1)
+        m1.set_title('Training Accuracy')
+        m1.set_xlabel('c')
+        m1.set_ylabel('g')
+        m1.set_xticks(cs)
+        m1.set_xticklabels(cs)
+        m1.set_yticks(gs)
+        m1.set_yticklabels(gs)
+
+        m2 = sns.heatmap(accuracy_dev, cmap='hot', ax=ax2, cbar_ax=cax, vmin=min_val, vmax=1)
+        m2.set_title('Validation Accuracy')
+        m2.set_xlabel('c')
+        m2.set_ylabel('g')
+        m2.set_xticks(cs)
+        m2.set_xticklabels(cs)
+        m2.set_yticks(gs)
+        m2.set_yticklabels(gs)
+
+        plt.tight_layout()
+        plt.show()
 
 
 if __name__ == "__main__":
@@ -153,10 +173,10 @@ if __name__ == "__main__":
     y_train = data_train[:,0].astype(int)
     y_dev = data_dev[:,0].astype(int)
 
-    ic_base = np.arange(-1, 2, 1)
+    ic_base = np.arange(-1, 1, 1)
     ic_fine = np.arange(-1, 1.1, 0.1,)
     
-    ig_base = np.arange(-1, 2, 1)
+    ig_base = np.arange(-1, 1, 1)
     ig_fine = None
 
     # lin_accuracies = linearSVM_compare(X_train, y_train, X_dev, y_dev, ic_base)

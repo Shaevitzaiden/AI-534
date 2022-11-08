@@ -35,21 +35,77 @@ def load_data(path):
 
     return data_np
 
-def linearSVM_compare(X_train, y_train, X_dev, y_dev, cs):
+def linearSVM_compare(X_train, y_train, X_dev, y_dev, i_s):
+    cs = np.power(10*np.ones(i_s.shape), i_s)
     accuracy = []
     for i, c in enumerate(cs):
-        linSVM = SVC(C=c, kernel='linear')
+        quadSVM = SVC(C=c, kernel='linear')
+        quadSVM.fit(X_train, y_train)
+        predictions = quadSVM.predict(X_dev)
+        accuracy.append(np.sum(predictions == y_dev)/np.size(y_dev))
+        print("i = {0}, c = {1}, accuracy = {2}%".format(i_s[i], np.round(c,2), np.round(100*accuracy[i],3)))
+    
+    best_idx = np.argmax(accuracy)
+    print("----- BEST -----")
+    print("i = {0}, c = {1}, accuracy = {2}%".format(i_s[best_idx], np.round(cs[best_idx],2), np.round(100*accuracy[best_idx],3)))
+
+    plt.plot(np.log10(cs), accuracy)
+    plt.xlabel("$log_{10}$(c)")
+    plt.ylabel("Accuracy (%)")
+    plt.title("Linear SVM Accuracy vs c")
+    plt.show()
+    return accuracy
+
+def quadraticSVM_compare(X_train, y_train, X_dev, y_dev, i_s):
+    cs = np.power(10*np.ones(i_s.shape), i_s)
+    accuracy = []
+    for i, c in enumerate(cs):
+        linSVM = SVC(C=c, kernel='poly', degree=2)
         linSVM.fit(X_train, y_train)
         predictions = linSVM.predict(X_dev)
         accuracy.append(np.sum(predictions == y_dev)/np.size(y_dev))
-        print("c = {0}, accuracy = {1}%".format(c, np.round(100*accuracy[i],2)))
-        
-        # print(confusion_matrix(y,predictions))
-        # print(classification_report(y,predictions))
-    plt.plot(cs, accuracy)
-    plt.xlabel("c-value")
+        print("i = {0}, c = {1}, accuracy = {2}%".format(i_s[i], np.round(c,2), np.round(100*accuracy[i],3)))
+    
+    best_idx = np.argmax(accuracy)
+    print("----- BEST -----")
+    print("i = {0}, c = {1}, accuracy = {2}%".format(i_s[best_idx], np.round(cs[best_idx],2), np.round(100*accuracy[best_idx],3)))
+
+    plt.plot(np.log10(cs), accuracy)
+    plt.xlabel("$log_{10}$(c)")
     plt.ylabel("Accuracy (%)")
-    plt.title("Linear SVM Accuracy vs c")
+    plt.title("Quadratic SVM Accuracy vs c")
+    plt.show()
+    return accuracy
+
+def rbfSVM_compare(X_train, y_train, X_dev, y_dev, ics, igs):
+    cs = np.power(10*np.ones(ics.shape), ics)
+    gs = np.power(10*np.ones(igs.shape), igs)
+    cc, gg = np.meshgrid(cs, gs)
+    cc_vertical = cc.flatten().reshape(cc.size,1)
+    gg_vertical = gg.flatten().reshape(gg.size,1)
+    
+    # Create vector of combinations so we can use a single loop as opposed to nested loops, just less messy
+    combo_vector = np.hstack((cc_vertical, gg_vertical))
+    print(combo_vector)
+    
+    accuracy = []
+    for i, (g, c) in enumerate(combo_vector):
+        rbfSVM = SVC(C=c, kernel='rbf', gamma=g)
+        rbfSVM.fit(X_train, y_train)
+        predictions = rbfSVM.predict(X_dev)
+        accuracy.append(np.sum(predictions == y_dev)/np.size(y_dev))
+        print("g = {0}, c = {1}, accuracy = {2}%".format(np.round(g,2), np.round(c,2), np.round(100*accuracy[i],3)))
+    
+    best_idx = np.argmax(accuracy)
+    print("----- BEST -----")
+    best_g, best_c = combo_vector[best_idx]
+    print("g = ({0}, {1}), c = ({2}, {3}), accuracy = {4}%".format(np.round(best_g,2), np.round(np.log10(best_g),2), np.round(best_c,2), np.round(np.log10(best_c),2), np.round(100*accuracy[best_idx],3)))
+
+    # plt.plot(np.log10(cs), accuracy)
+    # plt.xlabel("$log_{10}$(c)")
+    # plt.ylabel("Accuracy (%)")
+    # plt.title("Quadratic SVM Accuracy vs c")
+    # plt.show()
     return accuracy
 
 
@@ -97,8 +153,15 @@ if __name__ == "__main__":
     y_train = data_train[:,0].astype(int)
     y_dev = data_dev[:,0].astype(int)
 
-    i = np.arange(start=-4, stop=5, step=1)
-    c = np.power(10*np.ones(i.shape), i)
+    ic_base = np.arange(-1, 2, 1)
+    ic_fine = np.arange(-1, 1.1, 0.1,)
+    
+    ig_base = np.arange(-1, 2, 1)
+    ig_fine = None
 
-    lin_accuracies = linearSVM_compare(X_train, y_train, X_dev, y_dev, c)
+    # lin_accuracies = linearSVM_compare(X_train, y_train, X_dev, y_dev, ic_base)
+    # quad_accuracies = quadraticSVM_compare(X_train, y_train, X_dev, y_dev, ic_base)
+    rbf_accuracies = rbfSVM_compare(X_train, y_train, X_dev, y_dev, ic_base, ig_base)
+
+
      

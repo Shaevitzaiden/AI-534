@@ -38,11 +38,15 @@ def load_data(path):
 def linearSVM_compare(X_train, y_train, X_dev, y_dev, i_s):
     cs = np.power(10*np.ones(i_s.shape), i_s)
     accuracy = []
+    num_sv = []
     for i, c in enumerate(cs):
-        quadSVM = SVC(C=c, kernel='linear')
-        quadSVM.fit(X_train, y_train)
-        predictions = quadSVM.predict(X_dev)
+        linSVM = SVC(C=c, kernel='linear')
+        linSVM.fit(X_train, y_train)
+        predictions = linSVM.predict(X_dev)
         accuracy.append(np.sum(predictions == y_dev)/np.size(y_dev))
+        print(linSVM.n_support_)
+        print(linSVM.support_.shape)
+        num_sv.append(linSVM.n_support_)
         print("i = {0}, c = {1}, accuracy = {2}%".format(i_s[i], np.round(c,2), np.round(100*accuracy[i],3)))
     
     best_idx = np.argmax(accuracy)
@@ -80,10 +84,6 @@ def quadraticSVM_compare(X_train, y_train, X_dev, y_dev, i_s):
 def rbfSVM_compare(X_train, y_train, X_dev, y_dev, ics, igs, heatmap=True):
     cs = np.power(10*np.ones(ics.shape), ics)
     gs = np.power(10*np.ones(igs.shape), igs)
-    cc, gg = np.meshgrid(cs, gs)
-    cc_vertical = cc.flatten().reshape(cc.size,1)
-    gg_vertical = gg.flatten().reshape(gg.size,1)
-    
     accuracy_train = np.zeros((gs.size, cs.size))
     accuracy_dev = accuracy_train.copy()
 
@@ -99,7 +99,7 @@ def rbfSVM_compare(X_train, y_train, X_dev, y_dev, ics, igs, heatmap=True):
             accuracy_dev[row,col]= (np.sum(predictions_dev == y_dev)/np.size(y_dev))
             print("c = {0}, g = {1}, accuracy = {2}%".format(np.round(c,2), np.round(g,2), np.round(100*accuracy_dev[row,col],3)))
 
-    br, bc = np.argmax(accuracy_dev)
+    br, bc = np.unravel_index(accuracy_dev.argmax(), accuracy_dev.shape)
     print("------- BEST -------")
     print("c = {0}, g = {1}, accuracy = {2}%".format(np.round(cs[bc],2), np.round(gs[br],2), np.round(100*accuracy_dev[br,bc],3)))
 
@@ -110,14 +110,14 @@ def rbfSVM_compare(X_train, y_train, X_dev, y_dev, ics, igs, heatmap=True):
         m1 = sns.heatmap(accuracy_train, cmap='hot', ax=ax1, cbar=False, vmin=min_val, vmax=1)
         m1.set_title('Training Accuracy')
         m1.set_xlabel('c')
-        m1.set_ylabel('g')
+        m1.set_ylabel('gamma')
         m1.set_xticklabels(cs)
         m1.set_yticklabels(gs)
 
         m2 = sns.heatmap(accuracy_dev, cmap='hot', ax=ax2, cbar_ax=cax, vmin=min_val, vmax=1)
         m2.set_title('Validation Accuracy')
         m2.set_xlabel('c')
-        m2.set_ylabel('g')
+        m2.set_ylabel('gamma')
         m2.set_xticklabels(cs)
         m2.set_yticklabels(gs)
 
@@ -169,15 +169,15 @@ if __name__ == "__main__":
     y_train = data_train[:,0].astype(int)
     y_dev = data_dev[:,0].astype(int)
 
-    ic_base = np.arange(-1, 1, 1)
+    ic_base = np.arange(-4, 5, 1)
     ic_fine = np.arange(-1, 1.1, 0.1,)
     
-    ig_base = np.arange(-1, 1, 1)
+    ig_base = np.arange(-5, 2, 1)
     ig_fine = None
 
-    # lin_accuracies = linearSVM_compare(X_train, y_train, X_dev, y_dev, ic_base)
+    lin_accuracies = linearSVM_compare(X_train, y_train, X_dev, y_dev, ic_base)
     # quad_accuracies = quadraticSVM_compare(X_train, y_train, X_dev, y_dev, ic_base)
-    rbf_accuracies = rbfSVM_compare(X_train, y_train, X_dev, y_dev, ic_base, ig_base)
+    # rbf_accuracies = rbfSVM_compare(X_train, y_train, X_dev, y_dev, ic_base, ig_base)
 
 
      

@@ -46,7 +46,7 @@ def linearSVM_compare(X_train, y_train, X_dev, y_dev, i_s):
         accuracy.append(np.sum(predictions == y_dev)/np.size(y_dev))
         print(linSVM.n_support_)
         print(linSVM.support_.shape)
-        num_sv.append(linSVM.n_support_)
+        num_sv.append(linSVM.n_support_.size)
         print("i = {0}, c = {1}, accuracy = {2}%".format(i_s[i], np.round(c,2), np.round(100*accuracy[i],3)))
     
     best_idx = np.argmax(accuracy)
@@ -64,9 +64,9 @@ def quadraticSVM_compare(X_train, y_train, X_dev, y_dev, i_s):
     cs = np.power(10*np.ones(i_s.shape), i_s)
     accuracy = []
     for i, c in enumerate(cs):
-        linSVM = SVC(C=c, kernel='poly', degree=2)
-        linSVM.fit(X_train, y_train)
-        predictions = linSVM.predict(X_dev)
+        quadSVM = SVC(C=c, kernel='poly', degree=2)
+        quadSVM.fit(X_train, y_train)
+        predictions = quadSVM.predict(X_dev)
         accuracy.append(np.sum(predictions == y_dev)/np.size(y_dev))
         print("i = {0}, c = {1}, accuracy = {2}%".format(i_s[i], np.round(c,2), np.round(100*accuracy[i],3)))
     
@@ -126,8 +126,8 @@ def rbfSVM_compare(X_train, y_train, X_dev, y_dev, ics, igs, heatmap=True):
 
 
 if __name__ == "__main__":
-    data_train = load_data("HW03\IA3-train.csv")
-    data_dev = load_data("HW03\IA3-dev.csv")
+    data_train = load_data("IA3-train.csv")
+    data_dev = load_data("IA3-dev.csv")
 
     """ top 10 stuff
     # count_vectors = X.toarray()
@@ -170,14 +170,14 @@ if __name__ == "__main__":
     y_dev = data_dev[:,0].astype(int)
 
     ic_base = np.arange(-4, 5, 1)
-    ic_fine = np.arange(-1, 1.1, 0.1,)
+    ic_fine = np.arange(-1, 1.1, 0.1)
     
     ig_base = np.arange(-5, 2, 1)
     ig_fine = None
 
-    lin_accuracies = linearSVM_compare(X_train, y_train, X_dev, y_dev, ic_base)
+    # lin_accuracies = linearSVM_compare(X_train, y_train, X_dev, y_dev, ic_base)
     # quad_accuracies = quadraticSVM_compare(X_train, y_train, X_dev, y_dev, ic_base)
-    # rbf_accuracies = rbfSVM_compare(X_train, y_train, X_dev, y_dev, ic_base, ig_base)
+    rbf_accuracies = rbfSVM_compare(X_train, y_train, X_dev, y_dev, ic_base, ig_base)
 
 
      

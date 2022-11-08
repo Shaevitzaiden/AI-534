@@ -111,18 +111,14 @@ def rbfSVM_compare(X_train, y_train, X_dev, y_dev, ics, igs, heatmap=True):
         m1.set_title('Training Accuracy')
         m1.set_xlabel('c')
         m1.set_ylabel('g')
-        m1.set_xticks(cs)
         m1.set_xticklabels(cs)
-        m1.set_yticks(gs)
         m1.set_yticklabels(gs)
 
         m2 = sns.heatmap(accuracy_dev, cmap='hot', ax=ax2, cbar_ax=cax, vmin=min_val, vmax=1)
         m2.set_title('Validation Accuracy')
         m2.set_xlabel('c')
         m2.set_ylabel('g')
-        m2.set_xticks(cs)
         m2.set_xticklabels(cs)
-        m2.set_yticks(gs)
         m2.set_yticklabels(gs)
 
         plt.tight_layout()

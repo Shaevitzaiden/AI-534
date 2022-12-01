@@ -4,38 +4,38 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from GloVe_Embedder import *
-
-
-
-
-
-
-
-
-
-
-
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+from sklearn.cluster import KMeans
 
 
 if __name__ == "__main__":
     embedder = GloVe_Embedder("HW04/GloVe_Embedder_data.txt")
     
-    # Part 1 - Build your own data set of words
+    # Part 1a - Build your own data set of words
     seed_words = ["flight", "good", "terrible", "help", "late"]
-
     num_similar_words = 29
 
-    flight_seed = embedder.find_k_nearest("flight", num_similar_words)
-    good_seed = embedder.find_k_nearest("good", num_similar_words)
-    terrible_seed = embedder.find_k_nearest("terrible", num_similar_words)
-    help_seed = embedder.find_k_nearest("help", num_similar_words)
-    late_seed = embedder.find_k_nearest("late", num_similar_words)
+    # Getting the euclidean distance for different seed words
+    distance = np.zeros((num_similar_words, len(seed_words)))
+    for i, word in enumerate(seed_words):
+        similar_words = embedder.find_k_nearest(word, num_similar_words)
+        for row in range(len(similar_words)):
+            distance[row, i] = similar_words[row][1]
+    
 
-    # --- Test --- Trying to put the above into an for loop
-    # similar_words = np.zeros((num_similar_words, len(seed_words)))
-    # similar_words = np.zeros(len(seed_words))
-    # print(similar_words)
+    # Part 1b - Dimension reduction and visualization
+    pca = PCA()
+    pca.fit(distance)
 
-    # for i, word in enumerate(seed_words):
-    #     similar_words[:, i] = embedder.find_k_nearest(word, num_similar_words)
-    # print(similar_words)
+
+
+    # Part 1c - Clustering
+    k = range(2, 20)
+    for i in k:
+        KMeans(n_clusters=k).fit(distance)
+    
+
+ 
+
+

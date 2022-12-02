@@ -17,23 +17,27 @@ if __name__ == "__main__":
     num_similar_words = 29
 
     # Getting the euclidean distance for different seed words
-    distance = np.zeros((num_similar_words, len(seed_words)))
-    for i, word in enumerate(seed_words):
-        similar_words = embedder.find_k_nearest(word, num_similar_words)
-        for row in range(len(similar_words)):
-            distance[row, i] = similar_words[row][1]
+    words = []
+    distances = []
+    for word in seed_words:
+        nearest = embedder.find_k_nearest(word, 5)
+        w = [x[0] for x in nearest]
+        d = [x[1] for x in nearest]
+        words.append(w)
+        distances.append(d)
+    print(words)
     
 
     # Part 1b - Dimension reduction and visualization
     pca = PCA()
-    pca.fit(distance)
+    pca.fit(distances)
 
 
 
     # Part 1c - Clustering
     k = range(2, 20)
     for i in k:
-        KMeans(n_clusters=k).fit(distance)
+        KMeans(n_clusters=k).fit(distances)
     
 
  

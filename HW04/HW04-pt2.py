@@ -11,6 +11,10 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.svm import SVC
 from GloVe_Embedder import GloVe_Embedder
 
+
+
+# meaningful_word_list.extend([str(i) for i in range(1000)])
+
 def preprocess(data_train, data_dev, method="GloVe 1"):
 
     if method == "TF-IDF":
@@ -60,7 +64,7 @@ def preprocess(data_train, data_dev, method="GloVe 1"):
             # get index
             feature_index = tweet.nonzero()[1]
             tweet_words = words[feature_index]
-            tfidf_scores = [1/tweet[0, x] +.0000000001 for x in feature_index]
+            tfidf_scores = [1/tweet[0, x] + 0.0000000001 for x in feature_index]
             embeddings = ge.embed_list(tweet_words)
             embeddings_weighted = np.array([np.array(tfidf_scores) * embeddings[:, i] for i in range(200)])
             X_train[i, :] = np.average(embeddings_weighted, axis=1)
@@ -74,7 +78,91 @@ def preprocess(data_train, data_dev, method="GloVe 1"):
             embeddings_weighted = np.array([np.array(tfidf_scores) * embeddings[:, i] for i in range(200)])
             X_dev[i, :] = np.average(embeddings_weighted, axis=1)
 
+    # Just find the average embedding for all the words
+    elif method == "GloVe 3":
+        ge = GloVe_Embedder("GloVe_Embedder_data.txt")
+
+        meaningful_word_list = []
+        for word in ge.embedding_dict:
+            embedding = ge.embed_str(word, indicate_unk=True, warn_unk=False)
+            if not embedding[1]:
+                meaningful_word_list.append(word)
+        meaningful_word_list.extend([str(i) for i in range(1000)])
+
+
+        tweet_list_train = []
+        tweet_list_dev = []
+        for tweet in data_train:
+            tweet_list_train.append(re.findall(r'[\w]+', tweet[1].lower()))
+        for tweet in data_dev:
+            tweet_list_dev.append(re.findall(r'[\w]+', tweet[1].lower()))
+
+        X_train = np.zeros((9000, 200))
+        for i, tweet in enumerate(tweet_list_train):
+            embeddings = np.zeros((1, 200))
+            for p, word in enumerate(tweet):
+                embedding = ge.embed_str(word, indicate_unk=True)
+                if not embedding[1]:
+                    embeddings = np.concatenate((embeddings, np.reshape(embedding[0], (1, -1))), axis=0)
+                else:
+                    new_words = split_words(word, meaningful_word_list, ge)
+                    for new_word in new_words:
+                        embedding = ge.embed_str(new_word, indicate_unk=True)
+                        if not embedding[1]:
+                            embeddings = np.concatenate((embeddings, np.reshape(embedding[0], (1, -1))), axis=0)
+            np.delete(embeddings, 0, axis=0)
+            X_train[i, :] = np.average(embeddings, axis=0)
+
+        X_dev = np.zeros((2500, 200))
+        for i, tweet in enumerate(tweet_list_dev):
+            embeddings = np.zeros((1, 200))
+            for p, word in enumerate(tweet):
+                embedding = ge.embed_str(word, indicate_unk=True)
+                if not embedding[1]:
+                    embeddings = np.concatenate((embeddings, np.reshape(embedding[0], (1, -1))), axis=0)
+                else:
+                    new_words = split_words(word, meaningful_word_list, ge)
+                    for new_word in new_words:
+                        embedding = ge.embed_str(new_word, indicate_unk=True)
+                        if not embedding[1]:
+                            embeddings = np.concatenate((embeddings, np.reshape(embedding[0], (1, -1))), axis=0)
+            np.delete(embeddings, 0, axis=0)
+            X_dev[i, :] = np.average(embeddings, axis=0)
+
     return X_train, X_dev
+
+def parse(data, meaningful_word_list, result=None):
+    if result is None:
+        result = []
+    if data in meaningful_word_list:
+        result.append(data)
+        yield result[::-1]
+    else:
+        for i in range(1, len(data)):
+            first, last = data[:i], data[i:]
+            if last in meaningful_word_list:
+                yield from parse(first, result + [last])
+
+def split_words(word, meaningful_word_list, ge):
+    word_options = []
+    for words in parse(word, meaningful_word_list):
+        word_options.append(words)
+
+    if len(word_options) > 0:
+        avg = np.zeros(len(word_options))
+        for k, words in enumerate(word_options):
+
+            embeddings = ge.embed_list(words)
+            dist = np.zeros((len(words), len(words)))
+            for i, embed1 in enumerate(embeddings):
+                for j, embed2 in enumerate(embeddings):
+                    dist[i, j] = np.dot(embed1, embed2)
+            avg[k] = np.mean(dist)
+        index = np.argmin(avg)
+        return word_options[index]
+    else:
+        return word
+
 
 def load_data(path):
     """
@@ -218,5 +306,5 @@ if __name__ == "__main__":
     ig_base = np.arange(-2, 1, 1)
     ig_fine = None
 
-    # lin_accuracies = linearSVM_compare(X_train, y_train, X_dev, y_dev, ic_base)
-    rbf_accuracies = rbfSVM_compare(X_train, y_train, X_dev, y_dev, ic_base, ig_base)
+    lin_accuracies = linearSVM_compare(X_train, y_train, X_dev, y_dev, ic_base)
+    # rbf_accuracies = rbfSVM_compare(X_train, y_train, X_dev, y_dev, ic_base, ig_base)

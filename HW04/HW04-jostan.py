@@ -7,8 +7,6 @@ from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import sklearn.metrics
-
-
 def get_top_words(ge, seed_words, num_neighbors):
     nearest_neighbors = []
     for i, word in enumerate(seed_words):
@@ -37,6 +35,7 @@ def plot_points(x, y):
     start = 0
     colors = ["b", "g", "r", "k", "y"]
     for i in range(5):
+
         ax.scatter(x[start:start+30], y[start:start+30], color=colors[i])
         start += 30
 
@@ -45,46 +44,45 @@ def plot_points(x, y):
 
 if __name__ == "__main__":
     seed_words = ('flight', 'good', 'terrible', 'help', 'late')
-    ge = GloVe_Embedder("HW04/GloVe_Embedder_data.txt")
+    ge = GloVe_Embedder("GloVe_Embedder_data.txt")
     top_words = get_top_words(ge, seed_words, 30)
-    print(top_words)
     # print_top_words(top_words, formatted=True)
 
+    # Get full list of just words
     words = []
     for word_list in top_words:
         for word in word_list:
             words.append(word[0])
-    embeddings = ge.embed_list(words)
 
-    # PCA -------------------------------------------------------------------
+    # Get embedings for list of words
+    embedings = ge.embed_list(words)
+
+    # Do PCA and plot it
     pca = PCA(n_components=2)
-    principalComponents = pca.fit_transform(embeddings)
+    principalComponents = pca.fit_transform(embedings)
     # plot_points(principalComponents[:, 0], principalComponents[:, 1])
 
-    # TSNE ------------------------------------------------------------------
+    # Do tsne and plot it
     tsne = TSNE(n_components=2, perplexity=25)
-    z = tsne.fit_transform(embeddings)
+    z = tsne.fit_transform(embedings)
     # plot_points(z[:, 0], z[:, 1], words)
 
-    # Kmeans ----------------------------------------------------------------
-    inertias = []   # Kmeans objective
-    clusters = [n for n in range(2,21)] # number of clusters to test
-
+    # Do kmeans
+    inertias = []
+    ns = [n for n in range(2,21)]
     fig, ax = plt.subplots()
-    label_ground_truth = ([n for n in range(5) for i in range(30)]) # original seed word cluster ground truth
-
-    ari = []    # Adjust rand score
-    nmi = []    # Normalize mutial info score
-    purity = [] # Purity
-    for n in clusters:
+    label_ground_truth = ([n for n in range(5) for i in range(30)])
+    ari = []
+    nmi = []
+    purity = []
+    for n in ns:
         km = KMeans(n_clusters=n)
-        y_km = km.fit_transform(embeddings)     # Fitting kmeans to the original 150 words
-        inertias.append(km.inertia_)            # Saving the kmeans objective
-        label_pred = km.labels_                 # Labels each point
-
+        y_km = km.fit_transform(embedings)
+        inertias.append(km.inertia_)
+        label_pred = km.labels_
         ari.append(sklearn.metrics.adjusted_rand_score(label_ground_truth, label_pred))
         nmi.append(sklearn.metrics.normalized_mutual_info_score(label_ground_truth, label_pred))
-
+        # Calculate purity
         max_class_in_cluster_sum = 0
         for i in range(n):
             start = 0
@@ -95,16 +93,12 @@ if __name__ == "__main__":
 
             max_class_in_cluster_sum += (max(num_class_in_cluster))
         purity.append(max_class_in_cluster_sum / 150)
-    # print(purity)
 
-
-    ax.plot(clusters, nmi)
-    # ax.plot(clusters, ari)
-    ax.set_xticks(clusters)
-    # ax.set_ylim(0, 3000)
-    ax.set_xlabel("# of Clusters")
-    plt.show()
-
+    # Plot inertiias
+    ax.plot(ns, inertias)
+    ax.set_xticks(ns)
+    ax.set_ylim(0, 3000)
+    fig.show()
 
 
 

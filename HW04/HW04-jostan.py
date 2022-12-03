@@ -39,7 +39,7 @@ def plot_points(x, y):
         ax.scatter(x[start:start+30], y[start:start+30], color=colors[i])
         start += 30
 
-    fig.show()
+    # fig.show()
 
 def compare_tsne(embeddings):
     perplexities = [5, 10, 15, 20, 25, 30, 35, 40, 50]
@@ -82,37 +82,37 @@ if __name__ == "__main__":
     compare_tsne(embedings.copy())
     # plt.show()
 
-    # # Do kmeans
-    # inertias = []
-    # ns = [n for n in range(2,21)]
-    # fig, ax = plt.subplots()
-    # label_ground_truth = ([n for n in range(5) for i in range(30)])
-    # ari = []
-    # nmi = []
-    # purity = []
-    # for n in ns:
-    #     km = KMeans(n_clusters=n)
-    #     y_km = km.fit_transform(embedings)
-    #     inertias.append(km.inertia_)
-    #     label_pred = km.labels_
-    #     ari.append(sklearn.metrics.adjusted_rand_score(label_ground_truth, label_pred))
-    #     nmi.append(sklearn.metrics.normalized_mutual_info_score(label_ground_truth, label_pred))
-    #     # Calculate purity
-    #     max_class_in_cluster_sum = 0
-    #     for i in range(n):
-    #         start = 0
-    #         num_class_in_cluster = []
-    #         for j in range(5):
-    #             num_class_in_cluster.append(sum(label_pred[start:start + 30] == i))
-    #             start += 30
+    # Do kmeans
+    inertias = []
+    ns = [n for n in range(2,21)]
+    fig, ax = plt.subplots()
+    label_ground_truth = ([n for n in range(5) for i in range(30)])
+    ari = []
+    nmi = []
+    purity = []
+    for n in ns:
+        km = KMeans(n_clusters=n)
+        y_km = km.fit_transform(embedings)
+        inertias.append(km.inertia_)
+        label_pred = km.labels_
+        ari.append(sklearn.metrics.adjusted_rand_score(label_ground_truth, label_pred))
+        nmi.append(sklearn.metrics.normalized_mutual_info_score(label_ground_truth, label_pred))
+        # Calculate purity
+        max_class_in_cluster_sum = 0
+        for i in range(n):
+            start = 0
+            num_class_in_cluster = []
+            for j in range(5):
+                num_class_in_cluster.append(sum(label_pred[start:start + 30] == i))
+                start += 30
 
-    #         max_class_in_cluster_sum += (max(num_class_in_cluster))
-    #     purity.append(max_class_in_cluster_sum / 150)
+            max_class_in_cluster_sum += (max(num_class_in_cluster))
+        purity.append(max_class_in_cluster_sum / 150)
 
-    # # Plot inertiias
-    # ax.plot(ns, inertias)
-    # ax.set_xticks(ns)
-    # ax.set_ylim(0, 3000)
+    # Plot inertiias
+    ax.plot(ns, inertias)
+    ax.set_xticks(ns)
+    ax.set_ylim(0, 3000)
     # fig.show()
 
 

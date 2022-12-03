@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import re
 import sklearn as sk
-import seaborn as sns
+# import seaborn as sns
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -207,7 +207,7 @@ def linearSVM_compare(X_train, y_train, X_dev, y_dev, i_s, sv_plot=False):
     plt.ylabel("Accuracy")
     plt.title("Linear SVM Accuracy vs c")
     plt.legend()
-    plt.show()
+    # plt.show()
 
     if sv_plot:
         plt.clf()
@@ -215,7 +215,7 @@ def linearSVM_compare(X_train, y_train, X_dev, y_dev, i_s, sv_plot=False):
         plt.xlabel("$log_{10}$(c)")
         plt.ylabel("Number of Support Vectors")
         plt.title("Number of Support Vectors for Varying C-Values")
-        plt.show()
+        # plt.show()
 
     return accuracy_test
 
@@ -253,26 +253,26 @@ def rbfSVM_compare(X_train, y_train, X_dev, y_dev, ics, igs, heatmap=True, sv_pl
     print("c = {0}, g = {1}, accuracy = {2}%".format(np.round(cs[bc], 2), np.round(gs[br], 2),
                                                      np.round(100 * accuracy_dev[br, bc], 3)))
 
-    if heatmap:
-        f, (ax1, ax2, cax) = plt.subplots(1, 3, gridspec_kw={'width_ratios': [1, 1, 0.1], 'height_ratios': [1]})
-        min_val = np.min(np.hstack((accuracy_train, accuracy_train)))
+    # if heatmap:
+    #     f, (ax1, ax2, cax) = plt.subplots(1, 3, gridspec_kw={'width_ratios': [1, 1, 0.1], 'height_ratios': [1]})
+    #     min_val = np.min(np.hstack((accuracy_train, accuracy_train)))
 
-        m1 = sns.heatmap(accuracy_train, cmap='hot', ax=ax1, cbar=False, vmin=min_val, vmax=1)
-        m1.set_title('Training Accuracy')
-        m1.set_xlabel("$log_{10}$(c)")
-        m1.set_ylabel("$log_{10}$($\\gamma$)")
-        m1.set_xticklabels(ics)
-        m1.set_yticklabels(igs)
+    #     m1 = sns.heatmap(accuracy_train, cmap='hot', ax=ax1, cbar=False, vmin=min_val, vmax=1)
+    #     m1.set_title('Training Accuracy')
+    #     m1.set_xlabel("$log_{10}$(c)")
+    #     m1.set_ylabel("$log_{10}$($\\gamma$)")
+    #     m1.set_xticklabels(ics)
+    #     m1.set_yticklabels(igs)
 
-        m2 = sns.heatmap(accuracy_dev, cmap='hot', ax=ax2, cbar_ax=cax, vmin=min_val, vmax=1)
-        m2.set_title('Validation Accuracy')
-        m2.set_xlabel("$log_{10}$(c)")
-        m2.set_ylabel("$log_{10}$($\\gamma$)")
-        m2.set_xticklabels(ics)
-        m2.set_yticklabels(igs)
+    #     m2 = sns.heatmap(accuracy_dev, cmap='hot', ax=ax2, cbar_ax=cax, vmin=min_val, vmax=1)
+    #     m2.set_title('Validation Accuracy')
+    #     m2.set_xlabel("$log_{10}$(c)")
+    #     m2.set_ylabel("$log_{10}$($\\gamma$)")
+    #     m2.set_xticklabels(ics)
+    #     m2.set_yticklabels(igs)
 
-        plt.tight_layout()
-        plt.show()
+    #     plt.tight_layout()
+    #     plt.show()
 
     if sv_plot:
         plt.clf()
@@ -280,14 +280,14 @@ def rbfSVM_compare(X_train, y_train, X_dev, y_dev, ics, igs, heatmap=True, sv_pl
         plt.xlabel("$log_{10}$($\\gamma$)")
         plt.ylabel("Number of Support Vectors")
         plt.title("Number of Support Vectors for Varying $\gamma$-Values")
-        plt.show()
+        # plt.show()
 
         plt.clf()
         plt.plot(np.log10(cs), sv_g_constant)
         plt.xlabel("$log_{10}$(c)")
         plt.ylabel("Number of Support Vectors")
         plt.title("Number of Support Vectors for Varying C-Values")
-        plt.show()
+        # plt.show()
 
 if __name__ == "__main__":
     data_train = load_data("IA3-train.csv")

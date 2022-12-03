@@ -64,7 +64,7 @@ def compare_tsne(embeddings):
 
 if __name__ == "__main__":
     seed_words = ('flight', 'good', 'terrible', 'help', 'late')
-    ge = GloVe_Embedder("HW04\\GloVe_Embedder_data.txt")
+    ge = GloVe_Embedder("GloVe_Embedder_data.txt")
     top_words = get_top_words(ge, seed_words, 30)
     # print_top_words(top_words, formatted=True)
 

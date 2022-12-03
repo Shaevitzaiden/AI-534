@@ -69,11 +69,12 @@ if __name__ == "__main__":
     for word_list in top_words:
         for word in word_list:
             words.append(word[0])
+    
     embedings = ge.embed_list(words)
-    print(embedings)
+    
     pca = PCA(n_components=2)
     principalComponents = pca.fit_transform(embedings)
-    print(principalComponents)
+    
     # plot_points(principalComponents[:, 0], principalComponents[:, 1])
     # plt.show()
     

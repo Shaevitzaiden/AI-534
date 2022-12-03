@@ -1,12 +1,16 @@
 import numpy as np
 import sklearn.metrics
 
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 from GloVe_Embedder import GloVe_Embedder
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import sklearn.metrics
+
 def get_top_words(ge, seed_words, num_neighbors):
     nearest_neighbors = []
     for i, word in enumerate(seed_words):
@@ -39,7 +43,23 @@ def plot_points(x, y):
         ax.scatter(x[start:start+30], y[start:start+30], color=colors[i])
         start += 30
 
-    fig.show()
+    # fig.show()
+
+def compare_tsne(embeddings):
+    perplexities = [5, 10, 15, 20, 25, 30, 35, 40, 50]
+    p = 0
+    fig, axs = plt.subplots(3, 3)
+    colors = ["b", "g", "r", "k", "y"]
+    for i in range(3):
+        for j in range(3):
+            z = TSNE(n_components=2, perplexity=perplexities[p]).fit_transform(embeddings.copy())
+            x, y = z[:, 0], z[:, 1]
+            start = 0
+            for s in range(5):
+                axs[i,j].scatter(x[start:start+30], y[start:start+30], color=colors[s])
+                start += 30
+            axs[i,j].set_title('Perplexity = {0}'.format(perplexities[p]))
+            p += 1
 
 
 if __name__ == "__main__":
@@ -63,9 +83,8 @@ if __name__ == "__main__":
     # plot_points(principalComponents[:, 0], principalComponents[:, 1])
 
     # Do tsne and plot it
-    tsne = TSNE(n_components=2, perplexity=25)
-    z = tsne.fit_transform(embedings)
-    # plot_points(z[:, 0], z[:, 1], words)
+    compare_tsne(embedings.copy())
+    # plt.show()
 
     # Do kmeans
     inertias = []
@@ -98,7 +117,7 @@ if __name__ == "__main__":
     ax.plot(ns, inertias)
     ax.set_xticks(ns)
     ax.set_ylim(0, 3000)
-    fig.show()
+    # fig.show()
 
 
 

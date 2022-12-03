@@ -1,12 +1,16 @@
 import numpy as np
 import sklearn.metrics
 
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 from GloVe_Embedder import GloVe_Embedder
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import sklearn.metrics
+
 def get_top_words(ge, seed_words, num_neighbors):
     nearest_neighbors = []
     for i, word in enumerate(seed_words):
@@ -60,7 +64,7 @@ def compare_tsne(embeddings):
 
 if __name__ == "__main__":
     seed_words = ('flight', 'good', 'terrible', 'help', 'late')
-    ge = GloVe_Embedder("GloVe_Embedder_data.txt")
+    ge = GloVe_Embedder("HW04\\GloVe_Embedder_data.txt")
     top_words = get_top_words(ge, seed_words, 30)
     # print_top_words(top_words, formatted=True)
 

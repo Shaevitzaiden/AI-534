@@ -53,7 +53,7 @@ def plot_kmean_comparison(cluster_set, eval_metric, y_axis_title):
     ax.set_xticks(clusters)
     ax.set_xlabel("# of Clusters")
     ax.set_ylabel(f"{y_axis_title}")
-
+    ax.set_ylim(0, 1)
     plt.show()
 
 def compare_tsne(embeddings):
@@ -76,9 +76,9 @@ def compare_tsne(embeddings):
 
 if __name__ == "__main__":
     seed_words = ('flight', 'good', 'terrible', 'help', 'late')
-    ge = GloVe_Embedder("HW04/GloVe_Embedder_data.txt")
+    ge = GloVe_Embedder("GloVe_Embedder_data.txt")
     top_words = get_top_words(ge, seed_words, 30)
-    # print_top_words(top_words, formatted=True)
+    print_top_words(top_words, formatted=False)
 
     # Get full list of just words
     words = []
@@ -128,6 +128,6 @@ if __name__ == "__main__":
 
     # Plotting
     plot_kmean_comparison(clusters, inertias, "Kmeans Objective")
-    # plot_kmean_comparison(clusters, purity, "Purity")
-    # plot_kmean_comparison(clusters, ari, "Adjusted Random Index")
-    # plot_kmean_comparison(clusters, nmi, "Normalized Mutual Information")
+    plot_kmean_comparison(clusters, purity, "Purity")
+    plot_kmean_comparison(clusters, ari, "Adjusted Random Index")
+    plot_kmean_comparison(clusters, nmi, "Normalized Mutual Information")

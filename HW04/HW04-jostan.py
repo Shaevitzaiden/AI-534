@@ -41,6 +41,22 @@ def plot_points(x, y):
 
     fig.show()
 
+def compare_tsne(embeddings):
+    perplexities = [5, 10, 15, 20, 25, 30, 35, 40, 50]
+    p = 0
+    fig, axs = plt.subplots(3, 3)
+    colors = ["b", "g", "r", "k", "y"]
+    for i in range(3):
+        for j in range(3):
+            z = TSNE(n_components=2, perplexity=perplexities[p]).fit_transform(embeddings.copy())
+            x, y = z[:, 0], z[:, 1]
+            start = 0
+            for s in range(5):
+                axs[i,j].scatter(x[start:start+30], y[start:start+30], color=colors[s])
+                start += 30
+            axs[i,j].set_title('Perplexity = {0}'.format(perplexities[p]))
+            p += 1
+
 
 if __name__ == "__main__":
     seed_words = ('flight', 'good', 'terrible', 'help', 'late')
@@ -63,42 +79,41 @@ if __name__ == "__main__":
     # plot_points(principalComponents[:, 0], principalComponents[:, 1])
 
     # Do tsne and plot it
-    tsne = TSNE(n_components=2, perplexity=25)
-    z = tsne.fit_transform(embedings)
-    # plot_points(z[:, 0], z[:, 1], words)
+    compare_tsne(embedings.copy())
+    # plt.show()
 
-    # Do kmeans
-    inertias = []
-    ns = [n for n in range(2,21)]
-    fig, ax = plt.subplots()
-    label_ground_truth = ([n for n in range(5) for i in range(30)])
-    ari = []
-    nmi = []
-    purity = []
-    for n in ns:
-        km = KMeans(n_clusters=n)
-        y_km = km.fit_transform(embedings)
-        inertias.append(km.inertia_)
-        label_pred = km.labels_
-        ari.append(sklearn.metrics.adjusted_rand_score(label_ground_truth, label_pred))
-        nmi.append(sklearn.metrics.normalized_mutual_info_score(label_ground_truth, label_pred))
-        # Calculate purity
-        max_class_in_cluster_sum = 0
-        for i in range(n):
-            start = 0
-            num_class_in_cluster = []
-            for j in range(5):
-                num_class_in_cluster.append(sum(label_pred[start:start + 30] == i))
-                start += 30
+    # # Do kmeans
+    # inertias = []
+    # ns = [n for n in range(2,21)]
+    # fig, ax = plt.subplots()
+    # label_ground_truth = ([n for n in range(5) for i in range(30)])
+    # ari = []
+    # nmi = []
+    # purity = []
+    # for n in ns:
+    #     km = KMeans(n_clusters=n)
+    #     y_km = km.fit_transform(embedings)
+    #     inertias.append(km.inertia_)
+    #     label_pred = km.labels_
+    #     ari.append(sklearn.metrics.adjusted_rand_score(label_ground_truth, label_pred))
+    #     nmi.append(sklearn.metrics.normalized_mutual_info_score(label_ground_truth, label_pred))
+    #     # Calculate purity
+    #     max_class_in_cluster_sum = 0
+    #     for i in range(n):
+    #         start = 0
+    #         num_class_in_cluster = []
+    #         for j in range(5):
+    #             num_class_in_cluster.append(sum(label_pred[start:start + 30] == i))
+    #             start += 30
 
-            max_class_in_cluster_sum += (max(num_class_in_cluster))
-        purity.append(max_class_in_cluster_sum / 150)
+    #         max_class_in_cluster_sum += (max(num_class_in_cluster))
+    #     purity.append(max_class_in_cluster_sum / 150)
 
-    # Plot inertiias
-    ax.plot(ns, inertias)
-    ax.set_xticks(ns)
-    ax.set_ylim(0, 3000)
-    fig.show()
+    # # Plot inertiias
+    # ax.plot(ns, inertias)
+    # ax.set_xticks(ns)
+    # ax.set_ylim(0, 3000)
+    # fig.show()
 
 
 
